@@ -16,12 +16,25 @@ pipeline {
                 ])
             }
         }
+
         stage("build jar"){
             steps{
                 echo "==============================build jar=============================="
                 sh "cd app && mvn clean package"
             }
         }
+
+        stage("test sonarqube"){
+            steps{
+                echo "========executing test sonarqube========"
+                withSonarQubeEnv(credentialsId: 'sonarqube-server' , installationName: 'sonarqube-server'){
+                    sh " cd app && mvn clean verify sonar:sonar \
+                        -Dsonar.projectKey=test \
+                        -Dsonar.projectName='test' \
+                }
+            }   
+        }
+
         stage("build dockerfile"){
             steps {
                 script {
