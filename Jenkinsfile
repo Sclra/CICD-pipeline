@@ -1,47 +1,49 @@
 pipeline {
     agent any
+
     environment {
-        IMAGE_NAME = 'myusername/my-app'   // your Docker repo/name
+        IMAGE_NAME = 'myusername/my-app' // your Docker repo/name
     }
+
     stages {
-        stage("git clone") {
+
+        stage("Git Clone") {
             steps {
                 checkout([
                     $class: 'GitSCM',
                     branches: [[name: 'master']],
                     extensions: [
-                        [$class: 'RelativeTargetDirectory', relativeTargetDir: 'app']   // put folder name as string
+                        [$class: 'RelativeTargetDirectory', relativeTargetDir: 'app']
                     ],
                     userRemoteConfigs: [[url: 'https://github.com/Sclra/java-hello-world-with-maven.git']]
                 ])
             }
         }
 
-        stage("build jar"){
-            steps{
-                echo "==============================build jar=============================="
+        stage("Build JAR") {
+            steps {
+                echo "============================== Build JAR =============================="
                 sh "cd app && mvn clean package"
             }
         }
 
-        stage("test sonarqube"){
-            steps{
-                echo "========executing test sonarqube========"
-                withSonarQubeEnv(credentialsId: 'sonarqube-server' , installationName: 'sonarqube-server'){
-                    sh " cd app && mvn clean verify sonar:sonar \
+        stage("Test with SonarQube") {
+            steps {
+                echo "======== Executing SonarQube Analysis ========"
+                withSonarQubeEnv(credentialsId: 'sonarqube-server', installationName: 'sonarqube-server') {
+                    sh '''
+                        cd app && mvn clean verify sonar:sonar \
                         -Dsonar.projectKey=test \
-                        -Dsonar.projectName='test' \
+                        -Dsonar.projectName=test
+                    '''
                 }
-            }   
+            }
         }
 
-        stage("build dockerfile"){
+        stage("Build Docker Image") {
             steps {
                 script {
-                    // Compose tag with Jenkins build number
                     def imageTag = "${env.IMAGE_NAME}:build-${env.BUILD_NUMBER}"
-
-                    // Build the docker image with dynamic tag
                     def customImage = docker.build(imageTag)
                     echo "Built Docker image: ${imageTag}"
                 }
