@@ -53,7 +53,7 @@ pipeline {
                 script {
                     env.IMAGE_TAG = "${IMAGE_NAME}:build-${BUILD_NUMBER}"
                     // Save to a global variable so we can use it later
-                    dockerImage = docker.build(env.IMAGE_TAG, "app")
+                    dockerImage = docker.build(env.IMAGE_TAG)
                     echo "Built Docker image: ${env.IMAGE_TAG}"
                 }
             }
