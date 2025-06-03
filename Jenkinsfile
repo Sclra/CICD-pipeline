@@ -2,7 +2,7 @@ pipeline {
     agent any
 
     environment {
-        IMAGE_NAME = 'myusername/my-app' // your Docker repo/name
+        IMAGE_NAME = '192.168.56.23:6000/my-app' // Docker repo/name with registry
     }
 
     stages {
@@ -43,7 +43,7 @@ pipeline {
         stage("Quality Gate") {
             steps {
                 timeout(time: 15, unit: 'MINUTES') {
-                waitForQualityGate abortPipeline: true
+                    waitForQualityGate abortPipeline: true
                 }
             }
         }
@@ -51,9 +51,21 @@ pipeline {
         stage("Build Docker Image") {
             steps {
                 script {
-                    def imageTag = "${env.IMAGE_NAME}:build-${env.BUILD_NUMBER}"
-                    def customImage = docker.build(imageTag)
-                    echo "Built Docker image: ${imageTag}"
+                    env.IMAGE_TAG = "${IMAGE_NAME}:build-${BUILD_NUMBER}"
+                    // Save to a global variable so we can use it later
+                    dockerImage = docker.build(env.IMAGE_TAG, "app")
+                    echo "Built Docker image: ${env.IMAGE_TAG}"
+                }
+            }
+        }
+
+        stage("Push Docker Image") {
+            steps {
+                script {
+                    docker.withRegistry("http://192.168.56.23:6000", 'nexus-repo') {
+                        dockerImage.push()
+                        echo "Pushed Docker image: ${env.IMAGE_TAG}"
+                    }
                 }
             }
         }
