@@ -47,7 +47,17 @@ pipeline {
                 }
             }
         }
-
+    stages {
+        stage("Build JAR File") {
+            steps {
+                withMaven(
+                    mavenSettingsConfig: 'nexus-maven'
+                ) {
+                sh "cd app && mvn clean deploy"
+                }
+            }
+        }
+    }
         stage("Build Docker Image") {
             steps {
                 script {
