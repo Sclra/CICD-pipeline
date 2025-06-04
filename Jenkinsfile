@@ -47,7 +47,7 @@ pipeline {
                 }
             }
         }
-    stages {
+
         stage("Build JAR File") {
             steps {
                 withMaven(
@@ -57,7 +57,7 @@ pipeline {
                 }
             }
         }
-    }
+        
         stage("Build Docker Image") {
             steps {
                 script {
